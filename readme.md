@@ -1,84 +1,66 @@
-# Predictive Analytics
+# BigMart Sales Prediction
 
-## Overview
-Sales forecasting is critical for businesses to allocate resources, manage cash flow, and meet customer expectations. The BigMart Sales Prediction project explores data processing, exploratory data analysis, and the development of various machine-learning models to predict product sales in different stores.
+A machine learning pipeline that predicts product sales across BigMart
+outlet stores. Built from scratch in Python with a clean `src/` architecture,
+multi-model comparison, and a reproducible end-to-end pipeline.
 
----
+## Results
 
-## Aim
-The goal of this project is to build and evaluate predictive models for sales forecasting, helping BigMart understand the factors influencing sales and develop better business strategies.
+| Model              |   RMSE  |   MAE   |   R²  |
+|--------------------|---------|---------|-------|
+| Random Forest      | 1089.32 | 746.62  | 0.595 |
+| Gradient Boosting  | 1067.18 | 746.08  | 0.589 |
+| Linear Regression  | 1127.45 | 875.59  | 0.507 |
 
----
+Random Forest achieves the best generalisation (R² = 0.595).
 
-## Data Description
-The dataset contains annual sales records for 1559 products across ten stores in different cities. Key attributes include:
-- `item_identifier`: Unique item identifier
-- `item_weight`: Item weight
-- `item_fat_content`: Fat content in the item
-- `item_visibility`: Product visibility in the outlet
-- `item_type`: Product category
-- `item_mrp`: Maximum retail price
-- `outlet_identifier`: Outlet identifier
-- `outlet_establishment_year`: Year of outlet establishment
-- `outlet_size`: Outlet size
-- `outlet_location_type`: Outlet location type
-- `outlet_type`: Outlet type
-- `item_outlet_sales`: Overall sales of the product in the outlet
+## Dataset
 
----
+BigMart Sales dataset — 8,523 product-outlet combinations across 10 stores.
+Originally from the Analytics Vidhya Big Mart Sales Prediction challenge.
 
-## Tech Stack
-- Language: `Python`
-- Libraries: `Pandas`, `NumPy`, `Matplotlib`, `Scikit-learn`, `Redshift Connector`, `Pyearth`, `PyGAM`
+**Target variable:** `Item_Outlet_Sales` — annual product sales per outlet.
 
----
+**Key features:**
+- `Item_MRP` — maximum retail price (strongest predictor)
+- `Outlet_Type` — grocery store vs. supermarket
+- `Outlet_Age` — years since establishment (engineered feature)
+- `Item_Visibility` — product shelf visibility
+- `Item_Category` — Food / Drinks / Non-Consumable (engineered from identifier)
 
-## Approach
-1. Data Exploration with Amazon Redshift
-2. Data Cleaning and Imputation
-3. Exploratory Data Analysis
-   - Categorical Data
-   - Continuous Data
-   - Correlation
-     - Pearson’s Correlation
-     - Chi-squared Test and Contingency Tables
-     - Cramer’s V Test
-     - One-way ANOVA
-4. Feature Engineering
-   - Outlet Age
-   - Label Encoding for Categorical Variables
-5. Data Split
-6. Model Building and Evaluation
-   - Linear Regressor
-   - Elastic Net Regressor
-   - Random Forest Regressor
-   - Extra Trees Regressor
-   - Gradient Boosting Regressor
-   - MLP Regressor
-   - Multivariate Adaptive Regression Splines (MARS)
-   - Spline Regressor
-   - Generalized Additive Models
-   - Voting Regressor
-   - Stacking Regressor
-   - Model Blending
+## Pipeline
+## Project structure
+## Setup and run
 
----
+```bash
+python3 -m venv .venv
+source .venv/bin/activate
+pip install -r requirements.txt
+python main.py
+```
 
-## Code Structure
-- `data`: Contains project data.
-- `lib`: Reference notebooks.
-- `ml_pipeline`: Python files for functions.
-- `engine.py`: Main execution script.
-- `requirements.txt`: List of required packages.
-- `readme.md`: Instructions for running the code.
+Runs the full pipeline and saves the best model to `models/best_model.joblib`
+and a feature importance chart to `models/feature_importance.png`.
 
----
+## Feature engineering
 
-## Execution Instructions
+Two features were created from raw data:
 
-- Create a python environment using the command 'python3 -m venv myenv'.
-- Activate the environment by running the command 'myenv\Scripts\activate.bat'.
-- Install the requirements using the command 'pip install -r requirements.txt'
-- Run engine.py with the command 'python3 engine.py'.
+**Outlet_Age** — years since the outlet opened (reference year 2013, the
+dataset's collection year). Older outlets have established customer bases,
+which correlates with higher sales.
 
----
+**Item_Category** — derived from the first two characters of `Item_Identifier`
+(`FD` = Food, `DR` = Drinks, `NC` = Non-Consumable). Non-consumables are
+handled separately from food items in retail, so this is a meaningful signal.
+
+## What I'd improve
+
+- **Hyperparameter tuning** with `GridSearchCV` or `Optuna` — current models
+  use reasonable defaults but aren't optimised
+- **XGBoost / LightGBM** — likely to outperform Scikit-learn's GradientBoosting
+  on tabular data
+- **Time-series cross-validation** — the data has a temporal component
+  (outlet establishment year) that standard random splits don't respect
+- **A FastAPI `/predict` endpoint** — wrapping the saved model to serve
+  predictions over HTTP, similar to the CIFAR-10 deployment project
